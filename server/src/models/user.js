@@ -6,18 +6,8 @@ const jwt = require('jsonwebtoken');
 const { Schema } = mongoose;
 const userSchema = Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    username: {
-      type: String,
-      unique: true,
-      required: true,
-      trim: true,
-      lowercase: true,
-    },
+    name: { type: String, required: true, trim: true },
+    username: { type: String, unique: true, required: true, trim: true, lowercase: true },
     email: {
       type: String,
       unique: true,
@@ -26,7 +16,7 @@ const userSchema = Schema(
       lowercase: true,
       validate(value) {
         if (!validator.isEmail(value)) {
-          throw new Error('email is invalid');
+          throw new Error('Email is invalid');
         }
       },
     },
@@ -43,12 +33,10 @@ const userSchema = Schema(
     role: {
       type: String,
       default: 'guest',
-      enum: ['guest', 'admin', 'superadmin'],
+      enum: ['guest', 'admin', 'superadmin', 'staff', 'user'],
     },
-
     facebook: String,
     google: String,
-
     phone: {
       type: String,
       unique: true,
@@ -59,9 +47,7 @@ const userSchema = Schema(
         }
       },
     },
-    imageurl: {
-      type: String,
-    },
+    imageurl: String,
     tokens: [
       {
         token: {
@@ -71,34 +57,31 @@ const userSchema = Schema(
       },
     ],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-userSchema.methods.toJSON = function() {
-  const user = this;
-  const userObject = user.toObject();
-  if (!userObject.role === 'superadmin') {
-    delete userObject.updatedAt;
-    delete userObject.__v;
-  }
-  delete userObject.password;
-  delete userObject.tokens;
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
 
-  return userObject;
+  if (user.role !== 'superadmin') {
+    delete user.updatedAt;
+    delete user.__v;
+  }
+
+  delete user.password;
+  delete user.tokens;
+  return user;
 };
 
-userSchema.methods.generateAuthToken = async function() {
-  const user = this;
-  const token = jwt.sign({ _id: user._id.toString() }, 'mySecret');
-  user.tokens = user.tokens.concat({ token });
-  await user.save();
+userSchema.methods.generateAuthToken = async function () {
+  const token = jwt.sign({ _id: this._id.toString() }, 'mySecret');
+  this.tokens = this.tokens.concat({ token });
+  await this.save();
   return token;
 };
 
-userSchema.statics.findByCredentials = async (username, password) => {
-  const user = await User.findOne({ username });
+userSchema.statics.findByCredentials = async function (username, password) {
+  const user = await this.findOne({ username });
   if (!user) throw new Error('Unable to login');
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -107,15 +90,12 @@ userSchema.statics.findByCredentials = async (username, password) => {
   return user;
 };
 
-// Hash the plain text password before save
-userSchema.pre('save', async function(next) {
-  const user = this;
-  if (user.isModified('password')) {
-    user.password = await bcrypt.hash(user.password, 8);
+userSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 8);
   }
   next();
 });
 
 const User = mongoose.model('User', userSchema);
-
 module.exports = User;

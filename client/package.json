@@ -20,7 +20,7 @@
     "jspdf": "^1.5.3",
     "material-ui": "^0.20.2",
     "moment": "2.24.0",
-    "node-sass": "^4.13.0",
+    "sass": "^1.74.1",
     "react": "16.11.0",
     "react-chartjs-2": "^2.8.0",
     "react-dom": "16.11.0",
@@ -35,8 +35,7 @@
     "redux-thunk": "2.3.0",
     "slick-carousel": "1.8.1",
     "typeface-montserrat": "0.0.75",
-    "uuid": "3.3.3",
-    "webpack": "^5.64.0"
+    "uuid": "3.3.3"
   },
   "scripts": {
     "clean": "rm -rf node_modules/ && npm cache clean",

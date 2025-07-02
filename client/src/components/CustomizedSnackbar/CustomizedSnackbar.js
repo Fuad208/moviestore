@@ -1,26 +1,28 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Snackbar from '@material-ui/core/Snackbar';
-import SnackbarContentWrapper from '../SnackbarContentWrapper';
+import SnackbarContentWrapper from '../SnackbarContentWrapper/SnackbarContentWrapper';
 
-const CustomizedSnackbar = props => {
-  // const [open, setOpen] = React.useState(false);
-  const { isOpen, vertical, horizontal, variant, message } = props;
 
-  // function handleClose(event) {
-  //   setOpen(false);
-  // }
+const CustomizedSnackbar = (props) => {
+  const {
+    isOpen,
+    vertical = 'top',
+    horizontal = 'center',
+    variant = 'info',
+    message = '',
+    onClose,
+  } = props;
 
   return (
     <Snackbar
-      anchorOrigin={{
-        vertical,
-        horizontal
-      }}
-      open={isOpen}>
+      anchorOrigin={{ vertical, horizontal }}
+      open={isOpen}
+      onClose={onClose}
+      autoHideDuration={3000}
+    >
       <SnackbarContentWrapper
-        style={{ color: '#fff' }}
-        // onClose={handleClose}
+        onClose={onClose}
         variant={variant}
         message={message}
       />
@@ -33,6 +35,8 @@ CustomizedSnackbar.propTypes = {
   vertical: PropTypes.string,
   horizontal: PropTypes.string,
   variant: PropTypes.oneOf(['success', 'warning', 'error', 'info']).isRequired,
-  message: PropTypes.string
+  message: PropTypes.string,
+  onClose: PropTypes.func,
 };
+
 export default CustomizedSnackbar;

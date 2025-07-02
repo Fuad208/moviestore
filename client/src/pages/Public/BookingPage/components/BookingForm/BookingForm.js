@@ -1,5 +1,11 @@
 import React from 'react';
-import { Grid, Box, TextField, MenuItem, Typography } from '@material-ui/core';
+import {
+  Grid,
+  Box,
+  TextField,
+  MenuItem,
+  Typography
+} from '@material-ui/core';
 import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker
@@ -19,11 +25,13 @@ export default function BookingForm(props) {
     onChangeTime
   } = props;
 
+  // Cari showtime berdasarkan cinema yang dipilih
   const showtime = showtimes.find(
     showtime => showtime.cinemaId === selectedCinema
   );
 
-  if (!cinemas.length)
+  // Jika tidak ada cinema tersedia, tampilkan pesan
+  if (!cinemas.length) {
     return (
       <Box
         display="flex"
@@ -36,9 +44,11 @@ export default function BookingForm(props) {
         </Typography>
       </Box>
     );
+  }
 
   return (
     <Grid container spacing={3}>
+      {/* Dropdown Cinema */}
       <Grid item xs>
         <TextField
           fullWidth
@@ -54,6 +64,8 @@ export default function BookingForm(props) {
           ))}
         </TextField>
       </Grid>
+
+      {/* Tanggal Tersedia */}
       {showtime && (
         <Grid item xs>
           <MuiPickersUtilsProvider utils={MomentUtils}>
@@ -63,10 +75,11 @@ export default function BookingForm(props) {
               fullWidth
               id="start-date"
               label="Start Date"
+              format="MM/DD/YYYY"
               minDate={new Date(showtime.startDate)}
               maxDate={new Date(showtime.endDate)}
               value={selectedDate}
-              onChange={date => onChangeDate(date._d)}
+              onChange={(date) => onChangeDate(date ? date.toDate() : null)}
               KeyboardButtonProps={{
                 'aria-label': 'change date'
               }}
@@ -74,7 +87,9 @@ export default function BookingForm(props) {
           </MuiPickersUtilsProvider>
         </Grid>
       )}
-      {selectedDate && (
+
+      {/* Waktu tersedia */}
+      {selectedDate && Array.isArray(times) && times.length > 0 && (
         <Grid item xs>
           <TextField
             fullWidth

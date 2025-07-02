@@ -74,7 +74,7 @@ export default function BookingCheckout(props) {
           <Button
             color="inherit"
             fullWidth
-            disabled={seatsAvailable <= 0}
+            disabled={selectedSeats <= 0}
             onClick={() => onBookSeats()}>
             Checkout
           </Button>

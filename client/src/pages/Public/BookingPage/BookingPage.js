@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { withStyles, Grid, Container } from '@material-ui/core';
+import { withStyles, Grid, Container, Box } from '@material-ui/core';
 import {
   getMovie,
   getCinemasUserModeling,
@@ -31,7 +31,6 @@ import BookingForm from './components/BookingForm/BookingForm';
 import BookingSeats from './components/BookingSeats/BookingSeats';
 import BookingCheckout from './components/BookingCheckout/BookingCheckout';
 import BookingInvitation from './components/BookingInvitation/BookingInvitation';
-
 import jsPDF from 'jspdf';
 
 class BookingPage extends Component {
@@ -65,7 +64,6 @@ class BookingPage extends Component {
     }
   }
 
-  // JSpdf Generator For generating the PDF
   jsPdfGenerator = () => {
     const { movie, cinema, selectedDate, selectedTime, QRCode } = this.props;
     const doc = new jsPDF();
@@ -75,86 +73,108 @@ class BookingPage extends Component {
     doc.text(movie.title, 20, 20);
     doc.setFontSize(16);
     doc.text(cinema.name, 20, 30);
-    doc.text(
-      `Date: ${new Date(
-        selectedDate
-      ).toLocaleDateString()} - Time: ${selectedTime}`,
-      20,
-      40
-    );
+    doc.text(`Date: ${new Date(selectedDate).toLocaleDateString()} - Time: ${selectedTime}`, 20, 40);
     doc.addImage(QRCode, 'JPEG', 15, 40, 160, 160);
     doc.save(`${movie.title}-${cinema.name}.pdf`);
   };
 
   onSelectSeat = (row, seat) => {
-    const { cinema, setSelectedSeats } = this.props;
-    const seats = [...cinema.seats];
-    const newSeats = [...seats];
-    if (seats[row][seat] === 1) {
-      newSeats[row][seat] = 1;
-    } else if (seats[row][seat] === 2) {
-      newSeats[row][seat] = 0;
-    } else if (seats[row][seat] === 3) {
-      newSeats[row][seat] = 2;
-    } else {
-      newSeats[row][seat] = 2;
-    }
-    setSelectedSeats([row, seat]);
-  };
+  const { cinema, selectedSeats, setSelectedSeats } = this.props;
+  const seats = cinema?.seats ? [...cinema.seats.map(r => [...r])] : [];
+  if (!seats[row] || seats[row][seat] === undefined) return;
 
-  async checkout() {
-    const {
-      movie,
-      cinema,
-      selectedSeats,
-      selectedDate,
-      selectedTime,
-      getReservations,
-      isAuth,
-      user,
-      addReservation,
-      toggleLoginPopup,
-      showInvitationForm,
-      setQRCode
-    } = this.props;
+  if (seats[row][seat] === 1) return;
 
-    if (selectedSeats.length === 0) return;
-    if (!isAuth) return toggleLoginPopup();
+  let updatedSelectedSeats = [...selectedSeats];
 
-    const response = await addReservation({
-      date: selectedDate,
-      startAt: selectedTime,
-      seats: this.bookSeats(),
-      ticketPrice: cinema.ticketPrice,
-      total: selectedSeats.length * cinema.ticketPrice,
-      movieId: movie._id,
-      cinemaId: cinema._id,
-      username: user.username,
-      phone: user.phone
-    });
-    if (response.status === 'success') {
-      const { data } = response;
-      setQRCode(data.QRCode);
-      getReservations();
-      showInvitationForm();
-    }
+  if (seats[row][seat] === 2) {
+    seats[row][seat] = 0;
+    updatedSelectedSeats = updatedSelectedSeats.filter(
+      ([r, s]) => !(r === row && s === seat)
+    );
+  } else {
+    seats[row][seat] = 2;
+    updatedSelectedSeats.push([row, seat]);
   }
 
+  setSelectedSeats(updatedSelectedSeats);
+};
+
+async checkout() {
+  const {
+    selectedSeats,
+    isAuth,
+    toggleLoginPopup,
+    addReservation,
+    setQRCode,
+    getReservations,
+    showInvitationForm,
+    movie,
+    cinema,
+    selectedDate,
+    selectedTime,
+    user,
+    setAlert
+  } = this.props;
+
+  if (!selectedSeats.length) {
+    setAlert('Silakan pilih kursi terlebih dahulu.', 'error');
+    return;
+  }
+
+  if (!isAuth) {
+    toggleLoginPopup();
+    return;
+  }
+
+  const startAt = Array.isArray(selectedTime) ? selectedTime[0] : selectedTime;
+
+  if (!user?.username || !user?.phone || !startAt) {
+    setAlert('Profil atau waktu belum lengkap.', 'error');
+    return;
+  }
+
+  const payload = {
+    username: user.username,
+    phone: user.phone,
+    movieId: movie?._id,
+    cinemaId: cinema?._id,
+    date: selectedDate,
+    startAt: startAt, // ⬅️ string saja, bukan array
+    seats: selectedSeats,
+    ticketPrice: cinema.ticketPrice,
+    total: selectedSeats.length * cinema.ticketPrice
+  };
+
+  try {
+    console.log('Booking payload:', payload);
+    const res = await addReservation(payload);
+
+    if (res?.status === 'success') {
+      setQRCode(res.data.QRCode);
+      await getReservations();
+      showInvitationForm();
+    } else {
+      console.error('Booking failed', res);
+      setAlert(`Booking gagal: ${res?.message || 'Unknown error'}`, 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    setAlert(`Terjadi kesalahan sistem: ${err.message}`, 'error');
+  }
+}
+
+
+
+
   bookSeats() {
-    const { cinema, selectedSeats } = this.props;
-    const seats = [...cinema.seats];
+    const { cinema } = this.props;
+    if (!cinema?.seats) return [];
 
-    if (selectedSeats.length === 0) return;
-
-    const bookedSeats = seats
-      .map(row =>
-        row.map((seat, i) => (seat === 2 ? i : -1)).filter(seat => seat !== -1)
-      )
-      .map((seats, i) => (seats.length ? seats.map(seat => [i, seat]) : -1))
-      .filter(seat => seat !== -1)
-      .reduce((a, b) => a.concat(b));
-
-    return bookedSeats;
+    return cinema.seats
+      .flatMap((row, rowIndex) =>
+        row.map((seat, seatIndex) => (seat === 2 ? [rowIndex, seatIndex] : null)).filter(Boolean)
+      );
   }
 
   onFilterCinema() {
@@ -163,108 +183,65 @@ class BookingPage extends Component {
     if (!showtimes || !cinemas) return initialReturn;
 
     const uniqueCinemasId = showtimes
-      .filter(showtime =>
-        selectedTime ? showtime.startAt === selectedTime : true
-      )
+      .filter(showtime => (selectedTime ? showtime.startAt === selectedTime : true))
       .map(showtime => showtime.cinemaId)
       .filter((value, index, self) => self.indexOf(value) === index);
 
-    const uniqueCinemas = cinemas.filter(cinema =>
-      uniqueCinemasId.includes(cinema._id)
-    );
+    const uniqueCinemas = cinemas.filter(cinema => uniqueCinemasId.includes(cinema._id));
 
     const uniqueTimes = showtimes
-      .filter(showtime =>
-        selectedCinema ? selectedCinema === showtime.cinemaId : true
-      )
+      .filter(showtime => (selectedCinema ? selectedCinema === showtime.cinemaId : true))
       .map(showtime => showtime.startAt)
       .filter((value, index, self) => self.indexOf(value) === index)
-      .sort(
-        (a, b) => new Date('1970/01/01 ' + a) - new Date('1970/01/01 ' + b)
-      );
+      .sort((a, b) => new Date(`1970/01/01 ${a}`) - new Date(`1970/01/01 ${b}`));
 
     return { ...initialReturn, uniqueCinemas, uniqueTimes };
   }
 
   onGetReservedSeats = () => {
     const { reservations, cinema, selectedDate, selectedTime } = this.props;
+    if (!cinema?.seats) return [];
 
-    if (!cinema) return [];
-    const newSeats = [...cinema.seats];
-
+    const newSeats = cinema.seats.map(row => [...row]);
     const filteredReservations = reservations.filter(
       reservation =>
         new Date(reservation.date).toLocaleDateString() ===
           new Date(selectedDate).toLocaleDateString() &&
         reservation.startAt === selectedTime
     );
-    if (filteredReservations.length && selectedDate && selectedTime) {
-      const reservedSeats = filteredReservations
-        .map(reservation => reservation.seats)
-        .reduce((a, b) => a.concat(b));
-      reservedSeats.forEach(([row, seat]) => (newSeats[row][seat] = 1));
-      return newSeats;
-    }
+
+    filteredReservations
+      .flatMap(reservation => reservation.seats)
+      .forEach(([row, seat]) => {
+        if (newSeats[row]) newSeats[row][seat] = 1;
+      });
+
     return newSeats;
   };
 
   onGetSuggestedSeats = (seats, suggestedSeats) => {
     const { numberOfTickets, positions } = suggestedSeats;
-
-    const positionsArray = Object.keys(positions).map(key => {
-      return [String(key), positions[key]];
-    });
-
-    positionsArray.sort((a, b) => {
-      return b[1] - a[1];
-    });
+    const positionsArray = Object.entries(positions).sort((a, b) => b[1] - a[1]);
 
     if (positionsArray.every(position => position[1] === 0)) return;
 
     const step = Math.round(seats.length / 3);
-    let indexArr = [];
-    let suggested;
-    for (let position of positionsArray) {
-      switch (position[0]) {
-        case 'front':
-          indexArr = [0, step];
-          suggested = this.checkSeats(indexArr, seats, numberOfTickets);
-          break;
-        case 'center':
-          indexArr = [step, step * 2];
-          suggested = this.checkSeats(indexArr, seats, numberOfTickets);
-          break;
-        case 'back':
-          indexArr = [step * 2, step * 3];
-          suggested = this.checkSeats(indexArr, seats, numberOfTickets);
-          break;
-        default:
-          break;
+    for (let [zone] of positionsArray) {
+      let indexArr =
+        zone === 'front' ? [0, step] : zone === 'center' ? [step, step * 2] : [step * 2, seats.length];
+      const suggested = this.checkSeats(indexArr, seats, numberOfTickets);
+      if (suggested) {
+        this.getSeat(suggested, seats, numberOfTickets);
+        break;
       }
-      if (suggested) this.getSeat(suggested, seats, numberOfTickets);
-      break;
     }
   };
 
   checkSeats = (indexArr, seats, numberOfTickets) => {
     for (let i = indexArr[0]; i < indexArr[1]; i++) {
-      for (let seat in seats[i]) {
-        let seatNum = Number(seat);
-
-        if (
-          !seats[i][seatNum] &&
-          seatNum + (numberOfTickets - 1) <= seats[i].length
-        ) {
-          let statusAvailability = [];
-          for (let y = 1; y < numberOfTickets; y++) {
-            //check the next seat if available
-            if (!seats[i][seatNum + y]) {
-              statusAvailability.push(true);
-            } else {
-              statusAvailability.push(false);
-            }
-          }
-          if (statusAvailability.every(Boolean)) return [i, seatNum];
+      for (let j = 0; j <= seats[i].length - numberOfTickets; j++) {
+        if (seats[i].slice(j, j + numberOfTickets).every(seat => !seat)) {
+          return [i, j];
         }
       }
     }
@@ -273,75 +250,16 @@ class BookingPage extends Component {
 
   getSeat = (suggested, seats, numberOfTickets) => {
     const { setSuggestedSeats } = this.props;
+    const seatsToSet = [];
     for (let i = suggested[1]; i < suggested[1] + numberOfTickets; i++) {
-      const seat = [suggested[0], i];
-      setSuggestedSeats(seat);
+      seatsToSet.push([suggested[0], i]);
     }
+    setSuggestedSeats(seatsToSet);
   };
 
   onChangeCinema = event => this.props.setSelectedCinema(event.target.value);
   onChangeDate = date => this.props.setSelectedDate(date);
   onChangeTime = event => this.props.setSelectedTime(event.target.value);
-
-  sendInvitations = async () => {
-    const invitations = this.createInvitations();
-    if (!invitations) return;
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const url = '/invitations';
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(invitations)
-      });
-      if (response.ok) {
-        this.props.resetCheckout();
-        this.props.setAlert('invitations Send', 'success', 5000);
-        return { status: 'success', message: 'invitations Send' };
-      }
-    } catch (error) {
-      this.props.setAlert(error.message, 'error', 5000);
-      return {
-        status: 'error',
-        message: ' invitations have not send, try again.'
-      };
-    }
-  };
-
-  createInvitations = () => {
-    const {
-      user,
-      movie,
-      cinema,
-      selectedDate,
-      selectedTime,
-      invitations
-    } = this.props;
-
-    const invArray = Object.keys(invitations)
-      .map(key => ({
-        to: invitations[key],
-        host: user.name,
-        movie: movie.title,
-        time: selectedTime,
-        date: new Date(selectedDate).toDateString(),
-        cinema: cinema.name,
-        image: cinema.image,
-        seat: key
-      }))
-      .filter(inv => inv.to !== '');
-    return invArray;
-  };
-
-  setSuggestionSeats = (seats, suggestedSeats) => {
-    suggestedSeats.forEach(suggestedSeat => {
-      seats[suggestedSeat[0]][suggestedSeat[1]] = 3;
-    });
-    return seats;
-  };
 
   render() {
     const {
@@ -369,9 +287,12 @@ class BookingPage extends Component {
       this.onGetSuggestedSeats(seats, suggestedSeats);
     }
     if (suggestedSeat.length && !this.didSetSuggestion) {
-      seats = this.setSuggestionSeats(seats, suggestedSeat);
+      suggestedSeat.forEach(([row, seat]) => {
+        if (seats[row]) seats[row][seat] = 3;
+      });
       this.didSetSuggestion = true;
     }
+    const seatsAvailable = seats.flat().filter(seat => seat === 0).length;
 
     return (
       <Container maxWidth="xl" className={classes.container}>
@@ -399,23 +320,27 @@ class BookingPage extends Component {
                 onDownloadPDF={this.jsPdfGenerator}
               />
             )}
-
-            {cinema && selectedCinema && selectedTime && !showInvitation && (
+            {cinema && selectedCinema && selectedTime && !showInvitation ? (
               <>
                 <BookingSeats
                   seats={seats}
-                  onSelectSeat={(indexRow, index) =>
-                    this.onSelectSeat(indexRow, index)
-                  }
+                  onSelectSeat={(indexRow, index) => this.onSelectSeat(indexRow, index)}
                 />
                 <BookingCheckout
-                  user={user}
-                  ticketPrice={cinema.ticketPrice}
-                  seatsAvailable={cinema.seatsAvailable}
-                  selectedSeats={selectedSeats.length}
-                  onBookSeats={() => this.checkout()}
+  user={user}
+  ticketPrice={cinema.ticketPrice}
+  seatsAvailable={seatsAvailable}
+  selectedSeats={selectedSeats.length}
+  onBookSeats={() => {
+    console.log('Checkout clicked');
+    this.checkout();
+  }}          
                 />
               </>
+            ) : (
+              <Box textAlign="center" color="white" mt={2}>
+                Seats not available.
+              </Box>
             )}
           </Grid>
         </Grid>
@@ -423,7 +348,8 @@ class BookingPage extends Component {
           id="Edit-cinema"
           open={showLoginPopup}
           handleClose={() => toggleLoginPopup()}
-          maxWidth="sm">
+          maxWidth="sm"
+        >
           <LoginForm />
         </ResponsiveDialog>
       </Container>
@@ -491,7 +417,4 @@ const mapDispatchToProps = {
   setQRCode
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(withStyles(styles)(BookingPage));
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(BookingPage));
