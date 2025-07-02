@@ -29,21 +29,16 @@ class AddMovie extends Component {
     director: '',
     cast: '',
     releaseDate: new Date(),
-    endDate: new Date()
+    endDate: new Date(),
+    cinemaIds:[],
+    cinemas: []
   };
 
-  componentDidMount() {
+  async componentDidMount() {
     if (this.props.edit) {
       const {
-        title,
-        language,
-        genre,
-        director,
-        cast,
-        description,
-        duration,
-        releaseDate,
-        endDate
+        title, language, genre, director, cast,
+        description, duration, releaseDate, endDate, cinemaIds
       } = this.props.edit;
       this.setState({
         title,
@@ -54,9 +49,22 @@ class AddMovie extends Component {
         description,
         duration,
         releaseDate,
-        endDate
+        endDate,
+        cinemaIds: cinemaIds || ''
       });
     }
+
+    try {
+  const res = await fetch('/cinemas'); // HAPUS '/api'
+  const cinemas = await res.json();
+  this.setState({
+    cinemas,
+    cinemaIds: cinemas.map(c => c._id)
+  });
+} catch (error) {
+  console.error('Failed to fetch cinemas', error);
+}
+
   }
 
   componentDidUpdate(prevProps) {
@@ -79,14 +87,14 @@ class AddMovie extends Component {
   };
 
   onAddMovie = () => {
-    const { image, genre, ...rest } = this.state;
-    const movie = { ...rest, genre: genre.join(',') };
+    const { image, genre, cinemaIds, ...rest } = this.state;
+    const movie = { ...rest, genre: genre.join(','), cinemaIds };
     this.props.addMovie(image, movie);
   };
 
   onUpdateMovie = () => {
-    const { image, genre, ...rest } = this.state;
-    const movie = { ...rest, genre: genre.join(',') };
+    const { image, genre, cinemaIds, ...rest } = this.state;
+    const movie = { ...rest, genre: genre.join(','), cinemaIds };
     this.props.updateMovie(this.props.edit._id, movie, image);
   };
 
@@ -95,16 +103,8 @@ class AddMovie extends Component {
   render() {
     const { classes, className } = this.props;
     const {
-      title,
-      image,
-      genre,
-      language,
-      duration,
-      description,
-      director,
-      cast,
-      releaseDate,
-      endDate
+      title, image, genre, language, duration, description,
+      director, cast, releaseDate, endDate, cinemaIds, cinemas
     } = this.state;
 
     const rootClassName = classNames(classes.root, className);
@@ -129,11 +129,10 @@ class AddMovie extends Component {
               required
               value={title}
               variant="outlined"
-              onChange={event =>
-                this.handleFieldChange('title', event.target.value)
-              }
+              onChange={event => this.handleFieldChange('title', event.target.value)}
             />
           </div>
+
           <div className={classes.field}>
             <Select
               multiple
@@ -144,9 +143,7 @@ class AddMovie extends Component {
               required
               value={genre}
               variant="outlined"
-              onChange={event =>
-                this.handleFieldChange('genre', event.target.value)
-              }>
+              onChange={event => this.handleFieldChange('genre', event.target.value)}>
               {genreData.map((genreItem, index) => (
                 <MenuItem key={genreItem + '-' + index} value={genreItem}>
                   {genreItem}
@@ -154,6 +151,7 @@ class AddMovie extends Component {
               ))}
             </Select>
           </div>
+
           <div className={classes.field}>
             <TextField
               fullWidth
@@ -164,11 +162,15 @@ class AddMovie extends Component {
               required
               variant="outlined"
               value={description}
-              onChange={event =>
-                this.handleFieldChange('description', event.target.value)
-              }
-            />
+              onChange={e => this.handleFieldChange('cinemaIds', e.target.value)}>
+                {cinemas.map(cinema => 
+                  (<MenuItem key={cinema._id} value={cinema._id}>
+                    {cinema.name} - {cinema.city}
+                     </MenuItem>
+                       ))}
+                       </TextField>
           </div>
+
           <div className={classes.field}>
             <TextField
               select
@@ -178,9 +180,7 @@ class AddMovie extends Component {
               required
               value={language}
               variant="outlined"
-              onChange={event =>
-                this.handleFieldChange('language', event.target.value)
-              }>
+              onChange={event => this.handleFieldChange('language', event.target.value)}>
               {languageData.map((langItem, index) => (
                 <MenuItem key={langItem + '-' + index} value={langItem}>
                   {langItem}
@@ -195,11 +195,10 @@ class AddMovie extends Component {
               type="number"
               value={duration}
               variant="outlined"
-              onChange={event =>
-                this.handleFieldChange('duration', event.target.value)
-              }
+              onChange={event => this.handleFieldChange('duration', event.target.value)}
             />
           </div>
+
           <div className={classes.field}>
             <TextField
               className={classes.textField}
@@ -208,9 +207,7 @@ class AddMovie extends Component {
               required
               value={director}
               variant="outlined"
-              onChange={event =>
-                this.handleFieldChange('director', event.target.value)
-              }
+              onChange={event => this.handleFieldChange('director', event.target.value)}
             />
             <TextField
               className={classes.textField}
@@ -219,11 +216,13 @@ class AddMovie extends Component {
               required
               value={cast}
               variant="outlined"
-              onChange={event =>
-                this.handleFieldChange('cast', event.target.value)
-              }
+              onChange={event => this.handleFieldChange('cast', event.target.value)}
             />
           </div>
+
+          <div className={classes.field}>
+          </div>
+
           <div className={classes.field}>
             <MuiPickersUtilsProvider utils={MomentUtils}>
               <KeyboardDatePicker
@@ -233,14 +232,9 @@ class AddMovie extends Component {
                 id="release-date"
                 label="Release Date"
                 value={releaseDate}
-                onChange={date =>
-                  this.handleFieldChange('releaseDate', date._d)
-                }
-                KeyboardButtonProps={{
-                  'aria-label': 'change date'
-                }}
+                onChange={date => this.handleFieldChange('releaseDate', date._d)}
+                KeyboardButtonProps={{ 'aria-label': 'change date' }}
               />
-
               <KeyboardDatePicker
                 className={classes.textField}
                 inputVariant="outlined"
@@ -249,12 +243,11 @@ class AddMovie extends Component {
                 label="End Date"
                 value={endDate}
                 onChange={date => this.handleFieldChange('endDate', date._d)}
-                KeyboardButtonProps={{
-                  'aria-label': 'change date'
-                }}
+                KeyboardButtonProps={{ 'aria-label': 'change date' }}
               />
             </MuiPickersUtilsProvider>
           </div>
+
           <div className={classes.field}>
             <FileUpload
               className={classes.upload}

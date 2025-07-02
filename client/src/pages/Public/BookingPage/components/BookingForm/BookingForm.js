@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Grid,
   Box,
@@ -11,6 +11,7 @@ import {
   KeyboardDatePicker
 } from '@material-ui/pickers';
 import MomentUtils from '@date-io/moment';
+import BookingSeats from '../BookingSeats/BookingSeats';
 
 export default function BookingForm(props) {
   const {
@@ -22,12 +23,47 @@ export default function BookingForm(props) {
     onChangeDate,
     times,
     selectedTime,
-    onChangeTime
+    onChangeTime,
+    onSeatSelected
   } = props;
+
+  // ✅ Tambahkan state untuk seats
+  const [seats, setSeats] = useState([
+    { label: 'A', seats: [1, 1, 0, 1, 1] },
+    { label: 'B', seats: [1, null, 0, 1, 3] },
+    { label: 'C', seats: [1, 2, 2, 1, 0] },
+  ]);
+
+  // ✅ Fungsi untuk menangani klik pada kursi
+  const handleSelectSeat = (rowIndex, colIndex) => {
+    setSeats(prevSeats => {
+      const updated = [...prevSeats];
+      const row = { ...updated[rowIndex] };
+      const seatsInRow = [...row.seats];
+
+      const currentStatus = seatsInRow[colIndex];
+      if (currentStatus === 0 || currentStatus === null) return updated;
+
+      seatsInRow[colIndex] = currentStatus === 2 ? 1 : 2;
+
+      updated[rowIndex] = {
+        ...row,
+        seats: seatsInRow
+      };
+      const selected = updated.flatMap((row, rIndex) =>
+        row.seats.map((s, cIndex) => (s === 2 ? [rIndex, cIndex] : null)).filter(Boolean)
+      );
+
+      // ✅ Kirim ke parent (BookingPage) untuk update Redux
+      if (onSeatSelected) onSeatSelected(selected);
+
+      return updated;
+    });
+  };
 
   // Cari showtime berdasarkan cinema yang dipilih
   const showtime = showtimes.find(
-    showtime => showtime.cinemaId === selectedCinema
+    showtime => showtime.cinemaIds === selectedCinema
   );
 
   // Jika tidak ada cinema tersedia, tampilkan pesan
@@ -104,6 +140,16 @@ export default function BookingForm(props) {
               </MenuItem>
             ))}
           </TextField>
+        </Grid>
+      )}
+
+      {/* Tampilan tempat duduk */}
+      {selectedTime && (
+        <Grid item xs={12}>
+          <BookingSeats
+            seats={seats}
+            onSelectSeat={handleSelectSeat}
+          />
         </Grid>
       )}
     </Grid>

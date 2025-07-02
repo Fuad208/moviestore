@@ -11,7 +11,7 @@ const cinemaUserModeling = async (cinemas, username) => {
   if (userReservations.length) {
     let cinemaResult = {};
     userReservations.map(userReservation => {
-      const id = userReservation.cinemaId;
+      const id = userReservation.cinemaIds;
       cinemaResult.hasOwnProperty(id) ? ++cinemaResult[id] : (cinemaResult[id] = 1);
     });
     const sortedCinemaResult = [];
@@ -190,7 +190,7 @@ const reservationSeatsUserModeling = async (username, newSeats) => {
 
   userReservations.map(reservation => {
     for (let cinema of cinemas) {
-      if (cinema._id == reservation.cinemaId) {
+      if (cinema._id == reservation.cinemaIds) {
         //find how many rows the cinema has
         const position = getPosition(cinema.seats.length, reservation.seats);
         ++positions[position];

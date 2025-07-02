@@ -20,7 +20,7 @@ class ReservationsCalendar extends Component {
         reservation.movieId,
         movies,
         'title'
-      )}-Cinema: ${this.onFindAttr(reservation.cinemaId, cinemas, 'name')}`,
+      )}-Cinema: ${this.onFindAttr(reservation.cinemaIdss, cinemas, 'name')}`,
       start: reservation.date,
       // startTime: reservation.startAt,
       // end: reservation.date,

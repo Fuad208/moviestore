@@ -19,7 +19,7 @@ class AddShowtime extends Component {
     startDate: null,
     endDate: null,
     movieId: '',
-    cinemaId: ''
+    cinemaIds: ''
   };
 
   componentDidMount() {
@@ -29,14 +29,14 @@ class AddShowtime extends Component {
         startDate,
         endDate,
         movieId,
-        cinemaId
+        cinemaIds
       } = this.props.selectedShowtime;
       this.setState({
         startAt,
         startDate,
         endDate,
         movieId,
-        cinemaId
+        cinemaIds
       });
     }
   }
@@ -54,25 +54,25 @@ class AddShowtime extends Component {
   };
 
   onAddShowtime = () => {
-    const { startAt, startDate, endDate, movieId, cinemaId } = this.state;
+    const { startAt, startDate, endDate, movieId, cinemaIds } = this.state;
     const showtime = {
       startAt,
       startDate,
       endDate,
       movieId,
-      cinemaId
+      cinemaIds
     };
     this.props.addShowtime(showtime);
   };
 
   onUpdateShowtime = () => {
-    const { startAt, startDate, endDate, movieId, cinemaId } = this.state;
+    const { startAt, startDate, endDate, movieId, cinemaIds } = this.state;
     const showtime = {
       startAt,
       startDate,
       endDate,
       movieId,
-      cinemaId
+      cinemaIds
     };
     this.props.updateShowtime(showtime, this.props.selectedShowtime._id);
   };
@@ -95,7 +95,7 @@ class AddShowtime extends Component {
 
   render() {
     const { nowShowing, cinemas, classes, className } = this.props;
-    const { startAt, startDate, endDate, movieId, cinemaId } = this.state;
+    const { startAt, startDate, endDate, movieId, cinemaIds } = this.state;
 
     const rootClassName = classNames(classes.root, className);
     const title = this.props.selectedShowtime
@@ -164,10 +164,10 @@ class AddShowtime extends Component {
               label="Cinema"
               margin="dense"
               required
-              value={cinemaId}
+              value={cinemaIds}
               variant="outlined"
               onChange={event =>
-                this.handleFieldChange('cinemaId', event.target.value)
+                this.handleFieldChange('cinemaIds', event.target.value)
               }>
               {cinemas.map(cinema => (
                 <MenuItem key={cinema._id} value={cinema._id}>

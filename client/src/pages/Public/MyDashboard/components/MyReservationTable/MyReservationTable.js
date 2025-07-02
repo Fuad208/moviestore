@@ -82,7 +82,7 @@ class ReservationsTable extends Component {
                       {this.onFindAttr(reservation.movieId, movies, 'title')}
                     </TableCell>
                     <TableCell className={classes.tableCell}>
-                      {this.onFindAttr(reservation.cinemaId, cinemas, 'name')}
+                      {this.onFindAttr(reservation.cinemaIds, cinemas, 'name')}
                     </TableCell>
                     <TableCell className={classes.tableCell}>
                       {new Date(reservation.date).toLocaleDateString()}

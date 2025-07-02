@@ -7,15 +7,34 @@ const userModeling = require('../utils/userModeling');
 const router = new express.Router();
 
 // Create a movie
+const Cinema = require('../models/cinema'); // Tambahkan jika belum ada
+
+// Create a movie
 router.post('/movies', auth.enhance, async (req, res) => {
-  const movie = new Movie(req.body);
   try {
+    // Gunakan cinemaIds yang dikirim dari frontend
+    const movie = new Movie(req.body);
+    await movie.save();
+    res.status(201).send(movie);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+
+  try {
+    // Ambil semua cinema dari database
+    const allCinemas = await Cinema.find({}, '_id');
+    const cinemaIds = allCinemas.map(c => c._id);
+
+    // Gabungkan data movie dengan semua cinemaIds
+    const movie = new Movie({ ...req.body, cinemaIds });
+
     await movie.save();
     res.status(201).send(movie);
   } catch (e) {
     res.status(400).send(e);
   }
 });
+
 
 router.post(
   '/movies/photo/:id',

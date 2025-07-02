@@ -42,8 +42,7 @@ export default function BookingInvitation(props) {
           className={classes.successInfo}
           variant="body1"
           align="center">
-          You have successfuly booked your seats. Please fill the emails below,
-          to send invitations to your friends!
+          You have successfuly booked your seats.
         </Typography>
         <Box width={1} textAlign="center">
           <Button
@@ -53,7 +52,7 @@ export default function BookingInvitation(props) {
             Download Pass
           </Button>
         </Box>
-        <Grid className={classes.gridContainer} container spacing={3}>
+        {/* <Grid className={classes.gridContainer} container spacing={3}>
           {selectedSeats.map((seat, index) => (
             <Grid item xs={12} md={6} lg={4} key={'seat-' + index}>
               <TextField
@@ -93,7 +92,7 @@ export default function BookingInvitation(props) {
               </Button>
             </Grid>
           </Grid>
-        </Grid>
+        </Grid> */}
       </Paper>
     </div>
   );

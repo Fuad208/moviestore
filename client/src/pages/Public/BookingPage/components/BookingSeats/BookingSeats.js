@@ -1,34 +1,34 @@
-// BookingSeats.js
-import React, { Fragment } from 'react';
+import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
   row: {
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     width: '100%',
     marginBottom: theme.spacing(1),
   },
   rowLabel: {
-    color: 'white',
+    color: '#fff',
     width: 20,
     marginRight: theme.spacing(1),
-    textAlign: 'right'
+    textAlign: 'right',
+    fontWeight: 600,
   },
   seat: {
     cursor: 'pointer',
     color: '#fff',
     borderRadius: 4,
-    padding: theme.spacing(1.2, 1.6),
+    padding: theme.spacing(1),
     margin: theme.spacing(0.5),
     fontWeight: 600,
     fontSize: 12,
     textAlign: 'center',
     minWidth: 32,
     '&:hover': {
-      backgroundColor: 'rgb(120, 205, 4)',
+      opacity: 0.9,
     },
   },
   hiddenSeat: {
@@ -53,44 +53,50 @@ const useStyles = makeStyles(theme => ({
     height: 14,
     marginRight: theme.spacing(1),
     borderRadius: 2,
-  }
+  },
 }));
 
-const rowLabels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const getSeatColor = status => {
+  switch (status) {
+    case 0: return 'rgb(65, 66, 70)';     // Reserved
+    case 1: return 'rgb(96, 93, 169)';    // Available
+    case 2: return 'rgb(120, 205, 4)';    // Selected
+    case 3: return 'rgb(14, 151, 218)';   // Recommended
+    default: return 'gray';
+  }
+};
 
 export default function BookingSeats({ seats = [], onSelectSeat }) {
   const classes = useStyles();
-  const isValidSeats =
-    Array.isArray(seats) &&
+
+  const isValid = Array.isArray(seats) &&
     seats.length > 0 &&
-    seats.every(row => Array.isArray(row));
+    seats.every(row => row && Array.isArray(row.seats));
 
   return (
-    <Fragment>
-      <Box width={1} pt={5}>
-        {isValidSeats ? (
+    <>
+      <Box width={1} pt={4}>
+        {isValid ? (
           seats.map((row, rowIndex) => (
             <div key={rowIndex} className={classes.row}>
-              <div className={classes.rowLabel}>{rowLabels[rowIndex]}</div>
-              {row.map((seat, colIndex) => {
+              <div className={classes.rowLabel}>{row.label}</div>
+              {row.seats.map((seat, colIndex) => {
                 if (seat === null) {
-                  return <div key={colIndex} className={classes.hiddenSeat}>-</div>;
+                  return (
+                    <div key={colIndex} className={classes.hiddenSeat}>
+                      -
+                    </div>
+                  );
                 }
-                const seatNumber = `${rowLabels[rowIndex]}${colIndex + 1}`;
-                const bgColor =
-                  seat === 1
-                    ? 'rgb(65, 66, 70)'     // Reserved
-                    : seat === 2
-                    ? 'rgb(120, 205, 4)'    // Selected
-                    : seat === 3
-                    ? 'rgb(14, 151, 218)'   // Recommended
-                    : 'rgb(96, 93, 169)';   // Available
+
+                const seatNumber = `${row.label}${colIndex + 1}`;
+
                 return (
                   <Box
                     key={`seat-${rowIndex}-${colIndex}`}
                     className={classes.seat}
-                    style={{ backgroundColor: bgColor }}
-                    onClick={() => onSelectSeat(rowIndex, colIndex)}
+                    style={{ backgroundColor: getSeatColor(seat) }}
+                    onClick={() => onSelectSeat && onSelectSeat(rowIndex, colIndex)}
                   >
                     {seatNumber}
                   </Box>
@@ -99,29 +105,33 @@ export default function BookingSeats({ seats = [], onSelectSeat }) {
             </div>
           ))
         ) : (
-          <Typography align="center" color="textSecondary">Seats not available.</Typography>
+          <Typography align="center" color="textSecondary">
+            Seats not available.
+          </Typography>
         )}
       </Box>
 
-      {/* Legend */}
-      <Box className={classes.legendContainer}>
-        <div className={classes.legendItem}>
-          <div className={classes.legendBox} style={{ backgroundColor: 'rgb(96, 93, 169)' }} />
-          Seat Available
-        </div>
-        <div className={classes.legendItem}>
-          <div className={classes.legendBox} style={{ backgroundColor: 'rgb(65, 66, 70)' }} />
-          Reserved Seat
-        </div>
-        <div className={classes.legendItem}>
-          <div className={classes.legendBox} style={{ backgroundColor: 'rgb(120, 205, 4)' }} />
-          Selected Seat
-        </div>
-        <div className={classes.legendItem}>
-          <div className={classes.legendBox} style={{ backgroundColor: 'rgb(14, 151, 218)' }} />
-          Recommended Seat
-        </div>
-      </Box>
-    </Fragment>
+      {/* Legend - hanya ditampilkan jika kursi valid */}
+      {isValid && (
+        <Box className={classes.legendContainer}>
+          <div className={classes.legendItem}>
+            <div className={classes.legendBox} style={{ backgroundColor: 'rgb(96, 93, 169)' }} />
+            Seat Available
+          </div>
+          <div className={classes.legendItem}>
+            <div className={classes.legendBox} style={{ backgroundColor: 'rgb(65, 66, 70)' }} />
+            Reserved Seat
+          </div>
+          <div className={classes.legendItem}>
+            <div className={classes.legendBox} style={{ backgroundColor: 'rgb(120, 205, 4)' }} />
+            Selected Seat
+          </div>
+          <div className={classes.legendItem}>
+            <div className={classes.legendBox} style={{ backgroundColor: 'rgb(14, 151, 218)' }} />
+            Recommended Seat
+          </div>
+        </Box>
+      )}
+    </>
   );
 }

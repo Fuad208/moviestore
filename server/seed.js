@@ -96,7 +96,10 @@ async function seed() {
       name: 'Fuad XXI',
       ticketPrice: 50000,
       city: 'Jakarta',
-      seats: Array.from({ length: 100 }, (_, i) => `A${i + 1}`),
+      seats: Array.from({ length: 100 }, (_, i) => ({
+        row: 'A',
+        number: i + 1
+      })),
       seatsAvailable: 100,
       image: 'https://example.com/cinema.jpg'
     }).save();
@@ -105,7 +108,10 @@ async function seed() {
       name: 'Cinema Rakyat',
       ticketPrice: 35000,
       city: 'Bandung',
-      seats: Array.from({ length: 80 }, (_, i) => `B${i + 1}`),
+      seats: Array.from({ length: 80 }, (_, i) => ({
+        row: 'B',
+        number: i + 1
+      })),
       seatsAvailable: 80,
       image: 'https://example.com/cinema2.jpg'
     }).save();
@@ -114,7 +120,7 @@ async function seed() {
       ['13:00', '16:00', '19:00'].map(time =>
         Showtime.create({
           movieId: movie1._id,
-          cinemaId: cinema1._id,
+          cinemaIds: cinema1._id,
           startDate: new Date('2025-07-01'),
           endDate: new Date('2025-07-07'),
           startAt: time
@@ -126,7 +132,7 @@ async function seed() {
       ['14:00', '17:00', '20:00'].map(time =>
         Showtime.create({
           movieId: movie2._id,
-          cinemaId: cinema2._id,
+          cinemaIds: cinema2._id,
           startDate: new Date('2025-07-05'),
           endDate: new Date('2025-07-15'),
           startAt: time
@@ -141,7 +147,7 @@ async function seed() {
       ticketPrice: 50000,
       total: 100000,
       movieId: movie1._id,
-      cinemaId: cinema1._id,
+      cinemaIds: cinema1._id,
       username: user1.username,
       phone: user1.phone,
       checkin: false

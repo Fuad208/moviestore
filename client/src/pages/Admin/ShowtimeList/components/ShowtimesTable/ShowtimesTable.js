@@ -115,7 +115,7 @@ class ShowtimesTable extends Component {
                       {showtime.movieId}
                     </TableCell>
                     <TableCell className={classes.tableCell}>
-                      {showtime.cinemaId}
+                      {showtime.cinemaIds}
                     </TableCell>
                     <TableCell className={classes.tableCell}>
                       {moment(showtime.startDate).format('DD/MM/YYYY')}

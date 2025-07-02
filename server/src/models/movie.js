@@ -53,6 +53,10 @@ const movieSchema = new Schema({
     type: Date,
     required: true,
   },
+  cinemaIds: [{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'Cinema'
+}]
 });
 
 const Movie = mongoose.model('Movie', movieSchema);
