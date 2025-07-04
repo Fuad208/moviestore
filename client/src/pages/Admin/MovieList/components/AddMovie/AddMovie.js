@@ -169,11 +169,28 @@ class AddMovie extends Component {
           </div>
 
           <Typography variant="subtitle2">Available Cinemas</Typography>
-{cinemas.map(cinema => (
-  <Typography key={cinema._id}>
-    {cinema.name} - {cinema.city}
-  </Typography>
-))}
+          <TextField
+  select
+  SelectProps={{ multiple: true }}
+  className={classes.textField}
+  label="Select Cinemas"
+  margin="dense"
+  value={cinemaIds}
+  variant="outlined"
+  onChange={event => this.handleFieldChange('cinemaIds', event.target.value)}
+>
+  {cinemas.map(cinema => (
+    <MenuItem key={cinema._id} value={cinema._id}>
+      {cinema.name} - {cinema.city}
+    </MenuItem>
+  ))}
+</TextField>
+
+        {/* {cinemas.map(cinema => (
+          <Typography key={cinema._id}>
+            {cinema.name} - {cinema.city}
+          </Typography>
+        ))} */}
 
 
           <div className={classes.field}>
