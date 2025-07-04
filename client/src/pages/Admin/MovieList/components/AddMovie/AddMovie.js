@@ -153,23 +153,28 @@ class AddMovie extends Component {
           </div>
 
           <div className={classes.field}>
-            <TextField
-              fullWidth
-              multiline
-              className={classes.textField}
-              label="Description"
-              margin="dense"
-              required
-              variant="outlined"
-              value={description}
-              onChange={e => this.handleFieldChange('cinemaIds', e.target.value)}>
-                {cinemas.map(cinema => 
-                  (<MenuItem key={cinema._id} value={cinema._id}>
-                    {cinema.name} - {cinema.city}
-                     </MenuItem>
-                       ))}
-                       </TextField>
+           <TextField
+  fullWidth
+  multiline
+  rows={4}
+  className={classes.textField}
+  label="Description"
+  margin="normal"
+  required
+  variant="outlined"
+  value={description}
+  onChange={e => this.handleFieldChange('description', e.target.value)}
+/>
+
           </div>
+
+          <Typography variant="subtitle2">Available Cinemas</Typography>
+{cinemas.map(cinema => (
+  <Typography key={cinema._id}>
+    {cinema.name} - {cinema.city}
+  </Typography>
+))}
+
 
           <div className={classes.field}>
             <TextField
