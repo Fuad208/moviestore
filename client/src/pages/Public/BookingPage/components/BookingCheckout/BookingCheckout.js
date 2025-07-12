@@ -29,7 +29,7 @@ export default function BookingCheckout(props) {
     selectedSeats,
     seatsAvailable,
     onBookSeats
-  } = props;
+  } = props; 
 
   return (
     <Box marginTop={2} bgcolor="rgb(18, 20, 24)">
@@ -57,7 +57,7 @@ export default function BookingCheckout(props) {
             <Grid item>
               <Typography className={classes.bannerTitle}>Price</Typography>
               <Typography className={classes.bannerContent}>
-                {ticketPrice * selectedSeats} &euro;
+                Rp {selectedSeats * ticketPrice};
               </Typography>
             </Grid>
           </Grid>

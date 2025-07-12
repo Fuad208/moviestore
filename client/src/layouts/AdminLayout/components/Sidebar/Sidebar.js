@@ -123,22 +123,10 @@ class Sidebar extends Component {
           disablePadding
           subheader={
             <ListSubheader className={classes.listSubheader}>
-              Support
+             
             </ListSubheader>
           }>
-          <ListItem
-            className={classes.listItem}
-            component="a"
-            href="http://georgesimos.com"
-            target="_blank">
-            <ListItemIcon className={classes.listItemIcon}>
-              <InfoIcon />
-            </ListItemIcon>
-            <ListItemText
-              classes={{ primary: classes.listItemText }}
-              primary="Customer support"
-            />
-          </ListItem>
+
         </List>
       </section>
     );

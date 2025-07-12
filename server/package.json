@@ -8,8 +8,7 @@
     "dev": "nodemon src/index.js",
     "database": "/Users/georgesimos/mongodb/bin/mongod --dbpath=/Users/georgesimos//mongodb-data"
   },
-  "author": "charan",
-  "license": "MIT",
+  "author": "Fuad",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "express": "^4.16.4",

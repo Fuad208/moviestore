@@ -8,13 +8,7 @@ export default function Footer() {
     <div className={classes.root}>
       <Divider />
       <Typography className={classes.copyright} variant="body1">
-        &copy; Charan,Hari,Sreeram 2021
-      </Typography>
-      <Typography variant="caption">
-        Created with purpose |{' '}
-        <Link href="https://github.com/charangajjala" target="_blank" rel="noopener">
-          Charan-Hari-Sreram
-        </Link>
+        Kelompok 5 :Fuad Al Fajri, Rayhan Juliansyah, Farrel Adrian Laksana, Alfa Ramadhan
       </Typography>
     </div>
   );

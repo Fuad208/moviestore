@@ -10,12 +10,7 @@
     "build": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client"
   },
   "keywords": [],
-  "author": "Charan",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/georgesimos/cinema-plus/issues"
-  },
-  "homepage": "https://github.com/georgesimos/cinema-plus#readme",
+  "author": "Fuad",
   "devDependencies": {
     "eslint": "^6.1.0",
     "eslint-config-airbnb": "^18.0.1",
